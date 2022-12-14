@@ -1,3 +1,4 @@
+#include <string.h>
 #include "lib_tar.h"
 
 /**
@@ -16,7 +17,23 @@
  *         -3 if the archive contains a header with an invalid checksum value
  */
 int check_archive(int tar_fd) {
-    return 0;
+    lseek(tar_fd,0,SEEK_SET);
+    tar_header_t* a_header = NULL;
+    read(tar_fd,a_header,512);
+
+    tar_header_t* f_header = NULL;
+    read(tar_fd,f_header,512);
+    int count = 0;
+    while (f_header != NULL){
+        count++;
+        if(strncmp(f_header->magic,TMAGIC,TMAGLEN) != 0){return -1;}
+        if(strncmp(f_header->version, TVERSION, TVERSLEN) != 0){return -2;}
+        long size = TAR_INT(f_header->size);
+
+
+
+    }
+    return count;
 }
 
 /**
