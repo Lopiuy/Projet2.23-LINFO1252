@@ -29,14 +29,25 @@ int main(int argc, char **argv) {
         printf("Usage: %s tar_file\n", argv[0]);
         return -1;
     }
-
+    fprintf(stderr,"argv : %s\n",argv[1]);
     int fd = open(argv[1] , O_RDONLY);
+    //fprintf(stderr,"%s\n","A");
     if (fd == -1) {
         perror("open(tar_file)");
         return -1;
     }
 
+    char buf[512];
+    read(fd,buf,512);
+    fprintf(stderr,"buf in main : %s\n",buf);
+
+    tar_header_t* a_header = (tar_header_t*) buf;
+    printf("name in main : %s\n", a_header->name);
+
+
     int ret = check_archive(fd);
+    //fprintf(stderr,"%s\n","B");
+
     printf("check_archive returned %d\n", ret);
 
     return 0;

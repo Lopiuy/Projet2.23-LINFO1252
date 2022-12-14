@@ -19,12 +19,38 @@
  */
 int check_archive(int tar_fd) {
     lseek(tar_fd,0,SEEK_SET);
-    tar_header_t* a_header = NULL;
-    read(tar_fd,a_header,512);
+    //fprintf(stderr,"%s\n","B");
+    char buf[512];
+    fprintf(stderr,"buf before read : %s\n",buf);
+    read(tar_fd,buf,512);
+    fprintf(stderr,"buf after read : %s\n",buf);
+    //fprintf(stderr,"%s\n","B");
 
-    if(strncmp(a_header->magic,TMAGIC,TMAGLEN) != 0){return -1;}
+    tar_header_t* a_header = (tar_header_t*) buf;
+
+    //fprintf(stderr,"%s\n","B");
+
+
+    fprintf(stderr,"magic : %s\n",a_header->magic);
+    if(strncmp(a_header->magic,TMAGIC,TMAGLEN - 1) != 0){return -1;}
+    //fprintf(stderr,"%s\n","B");
+
     if(strncmp(a_header->version, TVERSION, TVERSLEN) != 0){return -2;}
-    printf("%ld", TAR_INT(a_header->chksum));
+    printf("chksum : %ld\n", TAR_INT(a_header->chksum));
+    printf("size : %ld, et size de lib_tar.h selon 'Finder' = 5860\n", TAR_INT(a_header->size));
+    printf("name : %s\n", a_header->name);
+    printf("uname : %s\n", a_header->uname);
+
+    read(tar_fd,buf,512);
+
+    tar_header_t* f_header = (tar_header_t*) buf;
+    printf("file chksum : %ld\n", TAR_INT(f_header->chksum));
+    printf("file size : %ld\n", TAR_INT(f_header->size));
+    //printf("%s\n", f_header->name);
+
+
+
+
 
     /*
     tar_header_t* f_header = NULL;

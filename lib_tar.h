@@ -19,7 +19,7 @@ typedef struct posix_header
     char linkname[100];           /* 157 */
     char magic[6];                /* 257 */
     char version[2];              /* 263 */
-    char uname[32];               /* 265 */
+    char uname[32];               /* 265 - Username*/
     char gname[32];               /* 297 */
     char devmajor[8];             /* 329 */
     char devminor[8];             /* 337 */
