@@ -1,5 +1,6 @@
 #include <string.h>
 #include "lib_tar.h"
+#include <stdio.h>
 
 /**
  * Checks whether the archive is valid.
@@ -21,19 +22,29 @@ int check_archive(int tar_fd) {
     tar_header_t* a_header = NULL;
     read(tar_fd,a_header,512);
 
+    if(strncmp(a_header->magic,TMAGIC,TMAGLEN) != 0){return -1;}
+    if(strncmp(a_header->version, TVERSION, TVERSLEN) != 0){return -2;}
+    printf("%ld", TAR_INT(a_header->chksum));
+
+    /*
     tar_header_t* f_header = NULL;
     read(tar_fd,f_header,512);
     int count = 0;
     while (f_header != NULL){
         count++;
-        if(strncmp(f_header->magic,TMAGIC,TMAGLEN) != 0){return -1;}
-        if(strncmp(f_header->version, TVERSION, TVERSLEN) != 0){return -2;}
         long size = TAR_INT(f_header->size);
-
-
+        int c = (size-1)*512;
+        char * readed = NULL;
+        read(tar_fd,readed,1);
+        while(readed){
+            c++;
+            read(tar_fd,readed,1);
+        }
+        if(TAR_INT(f_header->chksum) != c){return -3;}
 
     }
-    return count;
+    return count;*/
+    return 0;
 }
 
 /**
