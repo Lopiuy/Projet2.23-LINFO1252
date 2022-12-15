@@ -13,13 +13,13 @@ clean:
 	rm -f lib_tar.o tests soumission.tar
 
 empty: empty.txt
-	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c *.h *.c empty.txt > empty.tar
+	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c empty.txt > empty.tar
 
 tf: twentyfour.txt
-	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c *.h *.c twentyfour.txt > tf.tar
+	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c twentyfour.txt > tf.tar
 
 both: empty.txt twentyfour.txt
-	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c *.h *.c twentyfour.txt empty.txt > both.tar
+	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c twentyfour.txt empty.txt > both.tar
 
 
 submit: all

@@ -2,6 +2,21 @@
 #include "lib_tar.h"
 #include <stdio.h>
 
+
+int checkEnd(int fd){
+    char data[1024];
+    read(fd,data,1024);
+
+    uint sum = 0;
+    for (int i = 0; i < 512; ++i) {
+        sum += data[i];
+    }
+    lseek(fd,-1024,SEEK_CUR);
+
+    return sum == 0;
+}
+
+
 /**
  * Checks whether the archive is valid.
  *
@@ -19,58 +34,41 @@
  */
 int check_archive(int tar_fd) {
     lseek(tar_fd,0,SEEK_SET);
-    //fprintf(stderr,"%s\n","B");
     char buf[512];
-    fprintf(stderr,"buf before read : %s\n",buf);
-    read(tar_fd,buf,512);
-    fprintf(stderr,"buf after read : %s\n",buf);
-    //fprintf(stderr,"%s\n","B");
+    long skip = 0;
+    int end = 0;
+    int i = 0;
+    while(!end){
+        read(tar_fd,buf,512);
 
-    tar_header_t* a_header = (tar_header_t*) buf;
+        tar_header_t* a_header = (tar_header_t*) buf;
 
-    //fprintf(stderr,"%s\n","B");
+        fprintf(stderr,"%s\n",a_header->name);
+        if(strncmp(a_header->magic,TMAGIC,TMAGLEN-1) != 0){return -1;}
+        if(strncmp(a_header->version, TVERSION, TVERSLEN) != 0){return -2;}
 
-
-    fprintf(stderr,"magic : %s\n",a_header->magic);
-    if(strncmp(a_header->magic,TMAGIC,TMAGLEN - 1) != 0){return -1;}
-    //fprintf(stderr,"%s\n","B");
-
-    if(strncmp(a_header->version, TVERSION, TVERSLEN) != 0){return -2;}
-    printf("chksum : %ld\n", TAR_INT(a_header->chksum));
-    printf("size : %ld, et size de lib_tar.h selon 'Finder' = 5860\n", TAR_INT(a_header->size));
-    printf("name : %s\n", a_header->name);
-    printf("uname : %s\n", a_header->uname);
-
-    read(tar_fd,buf,512);
-
-    tar_header_t* f_header = (tar_header_t*) buf;
-    printf("file chksum : %ld\n", TAR_INT(f_header->chksum));
-    printf("file size : %ld\n", TAR_INT(f_header->size));
-    //printf("%s\n", f_header->name);
-
-
-
-
-
-    /*
-    tar_header_t* f_header = NULL;
-    read(tar_fd,f_header,512);
-    int count = 0;
-    while (f_header != NULL){
-        count++;
-        long size = TAR_INT(f_header->size);
-        int c = (size-1)*512;
-        char * readed = NULL;
-        read(tar_fd,readed,1);
-        while(readed){
-            c++;
-            read(tar_fd,readed,1);
+        uint checksum = 0;
+        for (int i = 0; i < 512; ++i) {
+            if(i>=148 && i<156){
+                checksum += ' ';
+            }else{
+                checksum += buf[i];
+            }
         }
-        if(TAR_INT(f_header->chksum) != c){return -3;}
 
+        if(TAR_INT(a_header->chksum) != checksum){return -3;}
+
+
+        skip += TAR_INT(a_header->size)/512; //number of full 512 block
+        skip += TAR_INT(a_header->size)%512 != 0; //number of not full blocks
+        lseek(tar_fd,skip*512,SEEK_CUR);
+
+        end = checkEnd(tar_fd);
+
+        i++;
     }
-    return count;*/
-    return 0;
+
+    return i;
 }
 
 /**
