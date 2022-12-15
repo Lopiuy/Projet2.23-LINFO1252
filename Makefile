@@ -6,11 +6,8 @@ lib_tar.o: lib_tar.c lib_tar.h
 
 tests: tests.c lib_tar.o
 
-couille: tests.c lib_tar.c
-	gcc -o $@ -Wall -Werror $^
-
 clean:
-	rm -f lib_tar.o tests soumission.tar
+	rm -f *.o tests *.tar
 
 empty: empty.txt
 	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c empty.txt > empty.tar
