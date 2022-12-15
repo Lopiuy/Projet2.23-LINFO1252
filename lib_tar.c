@@ -37,7 +37,7 @@ int check_archive(int tar_fd) {
     char buf[512];
     long skip = 0;
     int end = 0;
-    int i = 0;
+    int n = 0;
     while(!end){
         read(tar_fd,buf,512);
 
@@ -59,16 +59,17 @@ int check_archive(int tar_fd) {
         if(TAR_INT(a_header->chksum) != checksum){return -3;}
 
 
-        skip += TAR_INT(a_header->size)/512; //number of full 512 block
+        skip = TAR_INT(a_header->size)/512; //number of full 512 block
         skip += TAR_INT(a_header->size)%512 != 0; //number of not full blocks
         lseek(tar_fd,skip*512,SEEK_CUR);
+        fprintf(stderr,"%ld\n",skip);
 
         end = checkEnd(tar_fd);
 
-        i++;
+        n++;
     }
 
-    return i;
+    return n;
 }
 
 /**
