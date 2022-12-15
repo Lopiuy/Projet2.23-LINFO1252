@@ -43,7 +43,6 @@ int check_archive(int tar_fd) {
 
         tar_header_t* a_header = (tar_header_t*) buf;
 
-        fprintf(stderr,"%s\n",a_header->name);
         if(strncmp(a_header->magic,TMAGIC,TMAGLEN-1) != 0){return -1;}
         if(strncmp(a_header->version, TVERSION, TVERSLEN) != 0){return -2;}
 
@@ -62,7 +61,6 @@ int check_archive(int tar_fd) {
         skip = TAR_INT(a_header->size)/512; //number of full 512 block
         skip += TAR_INT(a_header->size)%512 != 0; //number of not full blocks
         lseek(tar_fd,skip*512,SEEK_CUR);
-        fprintf(stderr,"%ld\n",skip);
 
         end = checkEnd(tar_fd);
 
