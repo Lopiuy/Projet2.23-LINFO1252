@@ -89,7 +89,7 @@ int exists(int tar_fd, char *path) {
 
         tar_header_t* a_header = (tar_header_t*) buf;
 
-        if(strncmp(a_header->name,path, strlen(path)) == 0){return 1;}
+        if(strncmp(a_header->name,path, strlen(a_header->name)) == 0){return 1;}
 
         skip = TAR_INT(a_header->size)/512; //number of full 512 block
         skip += TAR_INT(a_header->size)%512 != 0; //number of not full blocks
@@ -110,10 +110,29 @@ int exists(int tar_fd, char *path) {
  *         any other value otherwise.
  */
 int is_dir(int tar_fd, char *path) {
-    if(path[strlen(path)-1] != '/'){
-        return 0;
+    lseek(tar_fd,0,SEEK_SET);
+    char buf[512];
+    long skip = 0;
+    int end = 0;
+    while(!end) {
+        read(tar_fd, buf, 512);
+
+        tar_header_t *a_header = (tar_header_t *) buf;
+
+        if (strncmp(a_header->name, path, strlen(a_header->name)) == 0) {
+            if(a_header->typeflag == DIRTYPE){
+                return 1;
+            }
+            return 0;
+        }
+
+        skip = TAR_INT(a_header->size) / 512; //number of full 512 block
+        skip += TAR_INT(a_header->size) % 512 != 0; //number of not full blocks
+        lseek(tar_fd, skip * 512, SEEK_CUR);
+
+        end = checkEnd(tar_fd);
     }
-    return exists(tar_fd,path);
+    return 0;
 }
 
 /**
@@ -126,10 +145,29 @@ int is_dir(int tar_fd, char *path) {
  *         any other value otherwise.
  */
 int is_file(int tar_fd, char *path) {
-    if(path[strlen(path)-1] == '/'){
-        return 0;
+    lseek(tar_fd,0,SEEK_SET);
+    char buf[512];
+    long skip = 0;
+    int end = 0;
+    while(!end) {
+        read(tar_fd, buf, 512);
+
+        tar_header_t *a_header = (tar_header_t *) buf;
+
+        if (strncmp(a_header->name, path, strlen(path)) == 0) {
+            if(a_header->typeflag == REGTYPE || a_header->typeflag == AREGTYPE){
+                return 1;
+            }
+            return 0;
+        }
+
+        skip = TAR_INT(a_header->size) / 512; //number of full 512 block
+        skip += TAR_INT(a_header->size) % 512 != 0; //number of not full blocks
+        lseek(tar_fd, skip * 512, SEEK_CUR);
+
+        end = checkEnd(tar_fd);
     }
-    return exists(tar_fd,path);
+    return 0;
 }
 
 /**
@@ -151,7 +189,7 @@ int is_symlink(int tar_fd, char *path) {
         tar_header_t *a_header = (tar_header_t *) buf;
 
         if (strncmp(a_header->name, path, strlen(path)) == 0) {
-            if(a_header->typeflag == SYMTYPE){
+            if(a_header->typeflag == SYMTYPE){ // || LNKTYPE?
                 return 1;
             }
             return 0;
@@ -193,6 +231,7 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
     return 0;
 }
 
+
 /**
  * Reads a file at a given path in the archive.
  *
@@ -212,5 +251,40 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
  *
  */
 ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *len) {
-    return 0;
+    if(path[strlen(path)-1] == '/'){
+        return -1;
+    }
+    lseek(tar_fd,0,SEEK_SET);
+    char buf[512];
+    long skip = 0;
+    int end = 0;
+    while(!end){
+        read(tar_fd,buf,512);
+
+        tar_header_t* a_header = (tar_header_t*) buf;
+
+        if(strncmp(a_header->name,path, strlen(path)) == 0){
+            if(a_header->typeflag == SYMTYPE){
+                fprintf(stderr,"%s",a_header->prefix);
+                //return read_file(tar_fd,pathoflink(path,a_header->linkname),offset,dest,len);
+            }
+            ssize_t sz = TAR_INT(a_header->size);
+            if(offset > sz){
+                return -2;
+            }
+            lseek(tar_fd,offset,SEEK_CUR);
+            if((sz-offset) < *len){
+                *len = sz-offset;
+            }
+            read(tar_fd,dest,*len);
+            return (sz-offset) - *len;
+        }
+
+        skip = TAR_INT(a_header->size)/512; //number of full 512 block
+        skip += TAR_INT(a_header->size)%512 != 0; //number of not full blocks
+        lseek(tar_fd,skip*512,SEEK_CUR);
+
+        end = checkEnd(tar_fd);
+    }
+    return -1;
 }

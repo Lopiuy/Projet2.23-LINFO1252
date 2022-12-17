@@ -60,11 +60,14 @@ int main(int argc, char **argv) {
     printf("Folder is directory returned %d\n", dirf);
     printf("Folder/ is directory returned %d\n", dirt);
     printf("Dossier/ is directory returned %d\n", dird);
-    printf("second is file returned %d\n", filf);
-    printf("second/ is file returned %d\n", filt);
+    printf("second/ is file returned %d\n", filf);
+    printf("second is file returned %d\n", filt);
     printf("third is file returned %d\n", fild);
     printf("symfile.txt is symfile returned %d\n", sym);
     printf("first.txt is symfile returned %d\n", nsym);
+
+
+
 
 
 
