@@ -27,6 +27,8 @@ three: empty.txt twentyfour.txt sixhundred.txt
 folder: Folder
 	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c Folder > folder.tar
 
+symfile: Folder
+	ln -s first.txt Folder/symfile.txt
 
 submit: all
 	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c *.h *.c Makefile > soumission.tar

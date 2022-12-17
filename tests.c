@@ -48,6 +48,8 @@ int main(int argc, char **argv) {
     int filf = is_file(fd,"Folder/second/");
     int filt = is_file(fd,"Folder/second.txt");
     int fild = is_file(fd,"Folder/third.txt");
+    int sym = is_symlink(fd,"Folder/symfile.txt");
+    int nsym = is_symlink(fd,"Folder/first.txt");
 
 
 
@@ -61,6 +63,9 @@ int main(int argc, char **argv) {
     printf("second is file returned %d\n", filf);
     printf("second/ is file returned %d\n", filt);
     printf("third is file returned %d\n", fild);
+    printf("symfile.txt is symfile returned %d\n", sym);
+    printf("first.txt is symfile returned %d\n", nsym);
+
 
 
     return 0;

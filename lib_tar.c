@@ -141,6 +141,28 @@ int is_file(int tar_fd, char *path) {
  *         any other value otherwise.
  */
 int is_symlink(int tar_fd, char *path) {
+    lseek(tar_fd,0,SEEK_SET);
+    char buf[512];
+    long skip = 0;
+    int end = 0;
+    while(!end) {
+        read(tar_fd, buf, 512);
+
+        tar_header_t *a_header = (tar_header_t *) buf;
+
+        if (strncmp(a_header->name, path, strlen(path)) == 0) {
+            if(a_header->typeflag == SYMTYPE){
+                return 1;
+            }
+            return 0;
+        }
+
+        skip = TAR_INT(a_header->size) / 512; //number of full 512 block
+        skip += TAR_INT(a_header->size) % 512 != 0; //number of not full blocks
+        lseek(tar_fd, skip * 512, SEEK_CUR);
+
+        end = checkEnd(tar_fd);
+    }
     return 0;
 }
 
