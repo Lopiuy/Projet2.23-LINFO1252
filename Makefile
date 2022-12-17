@@ -27,6 +27,9 @@ three: empty.txt twentyfour.txt sixhundred.txt
 folder: Folder
 	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c Folder > folder.tar
 
+df: DoubleFold
+	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c DoubleFold > df.tar
+
 symfile: Folder
 	ln -s first.txt Folder/symfile.txt
 

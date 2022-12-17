@@ -78,6 +78,16 @@ int main(int argc, char **argv) {
     printf("nbr de bytes lu : %zu\n",len);
     printf("read_file returned %zd\n",rett);
 
+    char* d[5];
+    for (int i = 0; i < 5; ++i) {
+        d[i] = (char*) malloc(100);
+    }
+    size_t no = 5;
+    list(fd, "DoubleFold/", d, &no);
+    for (int i = 0; i < no; ++i) {
+        printf("%s\n",d[i]);
+    }
+
 
     return 0;
 }

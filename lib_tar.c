@@ -37,12 +37,8 @@ char* pathoflink(char* sympath, char* file){
     }
     if(lastBack != 0){lastBack++;}
     char* path = (char*) malloc(lastBack + strlen(file)+1);
-    for (int i = 0; i < lastBack; ++i) {
-        path[i] = sympath[i];
-    }
-    for (int i = 0; i < strlen(file); ++i) {
-        path[i+lastBack] = file[i];
-    }
+    memcpy(path,sympath,lastBack);
+    memcpy(path+lastBack,file, strlen(file));
     path[lastBack + strlen(file)+1] = '\0';
     return path;
 }
@@ -76,6 +72,7 @@ int check_archive(int tar_fd) {
 
         if(strncmp(a_header->magic,TMAGIC,TMAGLEN-1) != 0){return -1;}
         if(strncmp(a_header->version, TVERSION, TVERSLEN) != 0){return -2;}
+
 
         uint checksum = 0;
         for (int i = 0; i < 512; ++i) {
@@ -259,7 +256,56 @@ int is_symlink(int tar_fd, char *path) {
  *         any other value otherwise.
  */
 int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
-    return 0;
+    lseek(tar_fd,0,SEEK_SET);
+    char buf[512];
+    long skip = 0;
+    int end = 0;
+    int initBack = 0;
+    int c = 0;
+    while(!end){
+        read(tar_fd,buf,512);
+
+        tar_header_t* a_header = (tar_header_t*) buf;
+
+        if(strncmp(a_header->name,path, strlen(path)) == 0){
+            if(a_header->typeflag == SYMTYPE){
+                return list(tar_fd,pathoflink(path,a_header->linkname),entries,no_entries);
+                //pas sur que pathoflink fonctionne pour ce cas
+            }
+
+            int lastBack = 0;
+            for (int i = 0; i < strlen(a_header->name); ++i) {
+                if(a_header->name[i] == '/'){
+                    lastBack = i;
+                }
+            }
+            if(c == 0){
+                initBack = lastBack;
+            }
+            if (lastBack > initBack){
+                if(a_header->name[lastBack+1] == '\0'){
+                    if(c < *no_entries){
+                        memcpy(entries[c], a_header->name, strlen(a_header->name));
+                        c++;
+                    }
+                }
+
+            }else{
+                if(c < *no_entries){
+                    memcpy(entries[c], a_header->name, strlen(a_header->name));
+                    c++;
+                }
+            }
+        }
+
+        skip = TAR_INT(a_header->size)/512; //number of full 512 block
+        skip += TAR_INT(a_header->size)%512 != 0; //number of not full blocks
+        lseek(tar_fd,skip*512,SEEK_CUR);
+
+        end = checkEnd(tar_fd);
+    }
+    *no_entries = c;
+    return 1;
 }
 
 
@@ -296,7 +342,10 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
                 return -1;
             }
             if(a_header->typeflag == SYMTYPE){
-                return read_file(tar_fd,pathoflink(path,a_header->linkname),offset,dest,len);
+                char* newPath = pathoflink(path,a_header->linkname);
+                int ret = read_file(tar_fd,newPath,offset,dest,len);
+                free(newPath);
+                return ret;
             }
             ssize_t sz = TAR_INT(a_header->size);
             if(offset > sz){
