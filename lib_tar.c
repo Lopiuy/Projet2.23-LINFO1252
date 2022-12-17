@@ -3,6 +3,11 @@
 #include <stdio.h>
 
 
+/**
+ * Check if end of archive reached
+ * @param fd A file descriptor pointing to the start of a file containing a tar archive.
+ * @return 1 if end reached, 0 in if not
+ */
 int checkEnd(int fd){
     char data[1024];
     read(fd,data,1024);
@@ -14,6 +19,32 @@ int checkEnd(int fd){
     lseek(fd,-1024,SEEK_CUR);
 
     return sum == 0;
+}
+
+
+/**
+ * Find the path of a file linked to a symlink file
+ * @param sympath path of the symlink file
+ * @param file name of the linked file
+ * @return path of the linked file
+ */
+char* pathoflink(char* sympath, char* file){
+    int lastBack = 0;
+    for (int i = 0; i < strlen(sympath); ++i) {
+        if(sympath[i] == '/'){
+            lastBack = i;
+        }
+    }
+    if(lastBack != 0){lastBack++;}
+    char* path = (char*) malloc(lastBack + strlen(file)+1);
+    for (int i = 0; i < lastBack; ++i) {
+        path[i] = sympath[i];
+    }
+    for (int i = 0; i < strlen(file); ++i) {
+        path[i+lastBack] = file[i];
+    }
+    path[lastBack + strlen(file)+1] = '\0';
+    return path;
 }
 
 
@@ -231,24 +262,6 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
     return 0;
 }
 
-char* pathoflink(char* sympath, char* file){
-    int lastBack = 0;
-    for (int i = 0; i < strlen(sympath); ++i) {
-        if(sympath[i] == '/'){
-            lastBack = i;
-        }
-    }
-    if(lastBack != 0){lastBack++;}
-    char* path = (char*) malloc(lastBack + strlen(file)+1);
-    for (int i = 0; i < lastBack; ++i) {
-        path[i] = sympath[i];
-    }
-    for (int i = 0; i < strlen(file); ++i) {
-        path[i+lastBack] = file[i];
-    }
-    path[lastBack + strlen(file)+1] = '\0';
-    return path;
-}
 
 /**
  * Reads a file at a given path in the archive.
