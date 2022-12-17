@@ -24,6 +24,9 @@ both: empty.txt twentyfour.txt
 three: empty.txt twentyfour.txt sixhundred.txt
 	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c twentyfour.txt empty.txt sixhundred.txt > three.tar
 
+folder: Folder
+	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c Folder > folder.tar
+
 
 submit: all
 	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c *.h *.c Makefile > soumission.tar

@@ -39,8 +39,16 @@ int main(int argc, char **argv) {
 
 
     int ret = check_archive(fd);
+    int exf = exists(fd,"Folder/first.txt");
+    int exs = exists(fd,"Folder/second.txt");
+    int ext = exists(fd,"Folder/third.txt");
+
 
     printf("check_archive returned %d\n", ret);
+    printf("first in Folder exist returned %d\n", exf);
+    printf("second in Folder exist returned %d\n", exs);
+    printf("third in Folder exist returned %d\n", ext);
+
 
     return 0;
 }
