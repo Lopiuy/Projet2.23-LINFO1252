@@ -45,6 +45,9 @@ int main(int argc, char **argv) {
     int dirf = is_dir(fd,"Folder");
     int dirt = is_dir(fd,"Folder/");
     int dird = is_dir(fd,"Dossier/");
+    int filf = is_file(fd,"Folder/second/");
+    int filt = is_file(fd,"Folder/second.txt");
+    int fild = is_file(fd,"Folder/third.txt");
 
 
 
@@ -55,6 +58,9 @@ int main(int argc, char **argv) {
     printf("Folder is directory returned %d\n", dirf);
     printf("Folder/ is directory returned %d\n", dirt);
     printf("Dossier/ is directory returned %d\n", dird);
+    printf("second is file returned %d\n", filf);
+    printf("second/ is file returned %d\n", filt);
+    printf("third is file returned %d\n", fild);
 
 
     return 0;

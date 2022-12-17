@@ -126,7 +126,10 @@ int is_dir(int tar_fd, char *path) {
  *         any other value otherwise.
  */
 int is_file(int tar_fd, char *path) {
-    return 0;
+    if(path[strlen(path)-1] == '/'){
+        return 0;
+    }
+    return exists(tar_fd,path);
 }
 
 /**
