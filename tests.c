@@ -42,12 +42,19 @@ int main(int argc, char **argv) {
     int exf = exists(fd,"Folder/first.txt");
     int exs = exists(fd,"Folder/second.txt");
     int ext = exists(fd,"Folder/third.txt");
+    int dirf = is_dir(fd,"Folder");
+    int dirt = is_dir(fd,"Folder/");
+    int dird = is_dir(fd,"Dossier/");
+
 
 
     printf("check_archive returned %d\n", ret);
     printf("first in Folder exist returned %d\n", exf);
     printf("second in Folder exist returned %d\n", exs);
     printf("third in Folder exist returned %d\n", ext);
+    printf("Folder is directory returned %d\n", dirf);
+    printf("Folder/ is directory returned %d\n", dirt);
+    printf("Dossier/ is directory returned %d\n", dird);
 
 
     return 0;
