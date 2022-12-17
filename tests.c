@@ -24,6 +24,7 @@ void debug_dump(const uint8_t *bytes, size_t len) {
     }
 }
 
+
 int main(int argc, char **argv) {
     if (argc < 2) {
         printf("Usage: %s tar_file\n", argv[0]);
@@ -66,9 +67,16 @@ int main(int argc, char **argv) {
     printf("symfile.txt is symfile returned %d\n", sym);
     printf("first.txt is symfile returned %d\n", nsym);
 
-
-
-
+    size_t len = 100;
+    uint8_t dest[100];
+    ssize_t rett = read_file(fd, "Folder/symfile.txt", 0, dest,  &len);
+    printf("lecture de symfile : \n");
+    for (int i = 0; i < len; ++i) {
+        printf("%c",dest[i]);
+    }
+    printf("\n");
+    printf("nbr de bytes lu : %zu\n",len);
+    printf("read_file returned %zd\n",rett);
 
 
     return 0;

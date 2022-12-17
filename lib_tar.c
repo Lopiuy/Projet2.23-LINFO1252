@@ -231,6 +231,24 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
     return 0;
 }
 
+char* pathoflink(char* sympath, char* file){
+    int lastBack = 0;
+    for (int i = 0; i < strlen(sympath); ++i) {
+        if(sympath[i] == '/'){
+            lastBack = i;
+        }
+    }
+    if(lastBack != 0){lastBack++;}
+    char* path = (char*) malloc(lastBack + strlen(file)+1);
+    for (int i = 0; i < lastBack; ++i) {
+        path[i] = sympath[i];
+    }
+    for (int i = 0; i < strlen(file); ++i) {
+        path[i+lastBack] = file[i];
+    }
+    path[lastBack + strlen(file)+1] = '\0';
+    return path;
+}
 
 /**
  * Reads a file at a given path in the archive.
@@ -251,9 +269,6 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
  *
  */
 ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *len) {
-    if(path[strlen(path)-1] == '/'){
-        return -1;
-    }
     lseek(tar_fd,0,SEEK_SET);
     char buf[512];
     long skip = 0;
@@ -264,9 +279,11 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
         tar_header_t* a_header = (tar_header_t*) buf;
 
         if(strncmp(a_header->name,path, strlen(path)) == 0){
+            if(a_header->typeflag == DIRTYPE){
+                return -1;
+            }
             if(a_header->typeflag == SYMTYPE){
-                fprintf(stderr,"%s",a_header->prefix);
-                //return read_file(tar_fd,pathoflink(path,a_header->linkname),offset,dest,len);
+                return read_file(tar_fd,pathoflink(path,a_header->linkname),offset,dest,len);
             }
             ssize_t sz = TAR_INT(a_header->size);
             if(offset > sz){
@@ -288,3 +305,9 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
     }
     return -1;
 }
+
+
+/*
+ * Ds les strlen des strcompare faut p-e changer prcq pas sur que ce soit très réglo qd je fait strlen(a_header->name)
+ *
+ */
