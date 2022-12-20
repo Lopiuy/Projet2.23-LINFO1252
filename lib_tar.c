@@ -117,7 +117,7 @@ int exists(int tar_fd, char *path) {
 
         tar_header_t* a_header = (tar_header_t*) buf;
 
-        if(strncmp(a_header->name,path, strlen(a_header->name)) == 0){return 1;}
+        if(strncmp(a_header->name,path, strlen(path)) == 0){return 1;}
 
         skip = TAR_INT(a_header->size)/512; //number of full 512 block
         skip += TAR_INT(a_header->size)%512 != 0; //number of not full blocks
@@ -147,7 +147,7 @@ int is_dir(int tar_fd, char *path) {
 
         tar_header_t *a_header = (tar_header_t *) buf;
 
-        if (strncmp(a_header->name, path, strlen(a_header->name)) == 0) {
+        if (strncmp(a_header->name, path, strlen(path)) == 0) {
             if(a_header->typeflag == DIRTYPE){
                 return 1;
             }
