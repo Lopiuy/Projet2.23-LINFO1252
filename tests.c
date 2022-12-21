@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-
+/*
     int ret = check_archive(fd);
     int exf = exists(fd,"Folder/first.txt");
     int exs = exists(fd,"Folder/second.txt");
@@ -69,21 +69,25 @@ int main(int argc, char **argv) {
 
     size_t len = 100;
     uint8_t dest[100];
-    ssize_t rett = read_file(fd, "Folder/symfile.txt", 0, dest,  &len);
-    printf("lecture de symfile : \n");
-    for (int i = 0; i < len; ++i) {
-        printf("%c",dest[i]);
+    ssize_t rett = read_file(fd, "Folder/gang/symfile.txt", 0, dest,  &len);
+    printf("len : %zu\n",len);
+    if(rett >= 0){
+        printf("lecture de symfile : \n");
+        for (int i = 0; i < len; ++i) {
+            printf("%c",dest[i]);
+        }
+        printf("\n");
+        printf("nbr de bytes lu : %zu\n",len);
     }
-    printf("\n");
-    printf("nbr de bytes lu : %zu\n",len);
-    printf("read_file returned %zd\n",rett);
+
+    printf("read_file returned %zd\n",rett);*/
 
     char* d[5];
     for (int i = 0; i < 5; ++i) {
         d[i] = (char*) malloc(100);
     }
-    size_t no = 5;
-    list(fd, "DoubleFold/", d, &no);
+    size_t no = 10;
+    list(fd, "Folder/", d, &no);
     for (int i = 0; i < no; ++i) {
         printf("%s\n",d[i]);
     }

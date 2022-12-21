@@ -31,7 +31,7 @@ df: DoubleFold
 	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c DoubleFold > df.tar
 
 symfile: Folder
-	ln -s first.txt Folder/symfile.txt
+	ln -s gang/viktor.txt Folder/symvic.txt
 
 submit: all
 	tar --posix --pax-option delete=".*" --pax-option delete="*time*" --no-xattrs --no-acl --no-selinux -c *.h *.c Makefile > soumission.tar

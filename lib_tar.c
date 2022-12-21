@@ -13,7 +13,7 @@ int checkEnd(int fd){
     read(fd,data,1024);
 
     uint sum = 0;
-    for (int i = 0; i < 512; ++i) {
+    for (int i = 0; i < 1024; ++i) {
         sum += data[i];
     }
     lseek(fd,-1024,SEEK_CUR);
@@ -268,10 +268,10 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
         tar_header_t* a_header = (tar_header_t*) buf;
 
         if(strncmp(a_header->name,path, strlen(path)) == 0){
-            if(a_header->typeflag == SYMTYPE){
+            /*if(a_header->typeflag == SYMTYPE){
                 return list(tar_fd,pathoflink(path,a_header->linkname),entries,no_entries);
                 //pas sur que pathoflink fonctionne pour ce cas
-            }
+            }*/
 
             int lastBack = 0;
             for (int i = 0; i < strlen(a_header->name); ++i) {
@@ -308,6 +308,46 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
     return 1;
 }
 
+ssize_t read_symf(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *len) {
+    lseek(tar_fd,0,SEEK_SET);
+    char buf[512];
+    long skip = 0;
+    int end = 0;
+    while(!end){
+        read(tar_fd,buf,512);
+        tar_header_t* a_header = (tar_header_t*) buf;
+        if(strstr(a_header->name,path) != NULL){
+            if(a_header->typeflag == DIRTYPE){
+                return -1;
+            }
+            if(a_header->typeflag == SYMTYPE){
+                int ret = read_file(tar_fd,a_header->linkname,offset,dest,len);
+                return ret;
+            }
+            if(!(a_header->typeflag == REGTYPE || a_header->typeflag == AREGTYPE)){
+                return -1;
+            }
+            ssize_t sz = TAR_INT(a_header->size);
+            if(offset > sz){
+                return -2;
+            }
+            lseek(tar_fd,offset,SEEK_CUR);
+            if((sz-offset) < *len){
+                *len = sz-offset;
+            }
+            read(tar_fd,dest,*len);
+            return (sz-offset) - *len;
+        }
+
+        skip = TAR_INT(a_header->size)/512; //number of full 512 block
+        skip += TAR_INT(a_header->size)%512 != 0; //number of not full blocks
+        lseek(tar_fd,skip*512,SEEK_CUR);
+
+        end = checkEnd(tar_fd);
+    }
+    return -1;
+}
+
 
 /**
  * Reads a file at a given path in the archive.
@@ -334,18 +374,17 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
     int end = 0;
     while(!end){
         read(tar_fd,buf,512);
-
         tar_header_t* a_header = (tar_header_t*) buf;
-
         if(strncmp(a_header->name,path, strlen(path)) == 0){
             if(a_header->typeflag == DIRTYPE){
                 return -1;
             }
             if(a_header->typeflag == SYMTYPE){
-                char* newPath = pathoflink(path,a_header->linkname);
-                int ret = read_file(tar_fd,newPath,offset,dest,len);
-                free(newPath);
+                int ret = read_symf(tar_fd,a_header->linkname,offset,dest,len);
                 return ret;
+            }
+            if(!(a_header->typeflag == REGTYPE || a_header->typeflag == AREGTYPE)){
+                return -1;
             }
             ssize_t sz = TAR_INT(a_header->size);
             if(offset > sz){
@@ -367,7 +406,6 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
     }
     return -1;
 }
-
 
 /*
  * Ds les strlen des strcompare faut p-e changer prcq pas sur que ce soit très réglo qd je fait strlen(a_header->name)
