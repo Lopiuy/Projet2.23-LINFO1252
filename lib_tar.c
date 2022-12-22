@@ -21,29 +21,6 @@ int checkEnd(int fd){
     return sum == 0;
 }
 
-
-/**
- * Find the path of a file linked to a symlink file
- * @param sympath path of the symlink file
- * @param file name of the linked file
- * @return path of the linked file
- */
-char* pathoflink(char* sympath, char* file){
-    int lastBack = 0;
-    for (int i = 0; i < strlen(sympath); ++i) {
-        if(sympath[i] == '/'){
-            lastBack = i;
-        }
-    }
-    if(lastBack != 0){lastBack++;}
-    char* path = (char*) malloc(lastBack + strlen(file)+1);
-    memcpy(path,sympath,lastBack);
-    memcpy(path+lastBack,file, strlen(file));
-    path[lastBack + strlen(file)+1] = '\0';
-    return path;
-}
-
-
 /**
  * Checks whether the archive is valid.
  *
@@ -261,51 +238,65 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
     long skip = 0;
     int end = 0;
     int initBack = 0;
-    int c = 0;
+    int c = -1;
     while(!end){
+
         read(tar_fd,buf,512);
 
         tar_header_t* a_header = (tar_header_t*) buf;
 
-        if(strncmp(a_header->name,path, strlen(path)) == 0){
-            /*if(a_header->typeflag == SYMTYPE){
-                return list(tar_fd,pathoflink(path,a_header->linkname),entries,no_entries);
-                //pas sur que pathoflink fonctionne pour ce cas
-            }*/
+        char* name = a_header->name;
+        if(a_header->typeflag == SYMTYPE){
+            strcat(name,"/");
+        }
 
+        if(strncmp(name,path, strlen(path)) == 0){
+            if(a_header->typeflag == SYMTYPE){
+                if(c == -1){
+                    return list(tar_fd,a_header->linkname,entries,no_entries);
+                }
+            }
             int lastBack = 0;
             for (int i = 0; i < strlen(a_header->name); ++i) {
                 if(a_header->name[i] == '/'){
                     lastBack = i;
                 }
             }
-            if(c == 0){
+            if(c == -1){
                 initBack = lastBack;
-            }
-            if (lastBack > initBack){
-                if(a_header->name[lastBack+1] == '\0'){
+                c++;
+            }else{
+                if (lastBack > initBack){
+                    if(a_header->name[lastBack+1] == '\0'){
+
+                        if(c < *no_entries){
+                            memcpy(entries[c], name, strlen(name));
+                            c++;
+                        }
+                    }
+
+                }else{
                     if(c < *no_entries){
-                        memcpy(entries[c], a_header->name, strlen(a_header->name));
+                        memcpy(entries[c], name, strlen(name));
                         c++;
                     }
                 }
-
-            }else{
-                if(c < *no_entries){
-                    memcpy(entries[c], a_header->name, strlen(a_header->name));
-                    c++;
-                }
             }
+
         }
 
-        skip = TAR_INT(a_header->size)/512; //number of full 512 block
+        skip += TAR_INT(a_header->size)/512; //number of full 512 block
         skip += TAR_INT(a_header->size)%512 != 0; //number of not full blocks
-        lseek(tar_fd,skip*512,SEEK_CUR);
+        skip++;
+        lseek(tar_fd,skip*512,SEEK_SET);
 
         end = checkEnd(tar_fd);
     }
+    if(c == -1){
+        c++;
+    }
     *no_entries = c;
-    return 1;
+    return *no_entries;
 }
 
 ssize_t read_symf(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *len) {
@@ -321,7 +312,7 @@ ssize_t read_symf(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
                 return -1;
             }
             if(a_header->typeflag == SYMTYPE){
-                int ret = read_file(tar_fd,a_header->linkname,offset,dest,len);
+                int ret = read_symf(tar_fd,a_header->linkname,offset,dest,len);   //si test marche plus remettre readfile !!!
                 return ret;
             }
             if(!(a_header->typeflag == REGTYPE || a_header->typeflag == AREGTYPE)){
@@ -406,8 +397,3 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
     }
     return -1;
 }
-
-/*
- * Ds les strlen des strcompare faut p-e changer prcq pas sur que ce soit très réglo qd je fait strlen(a_header->name)
- *
- */

@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-/*
+
     int ret = check_archive(fd);
     int exf = exists(fd,"Folder/first.txt");
     int exs = exists(fd,"Folder/second.txt");
@@ -80,17 +80,20 @@ int main(int argc, char **argv) {
         printf("nbr de bytes lu : %zu\n",len);
     }
 
-    printf("read_file returned %zd\n",rett);*/
+    printf("read_file returned %zd\n",rett);
 
-    char* d[5];
-    for (int i = 0; i < 5; ++i) {
+    char* d[10];
+    for (int i = 0; i < 10; ++i) {
         d[i] = (char*) malloc(100);
     }
     size_t no = 10;
-    list(fd, "Folder/", d, &no);
+    int ah = list(fd, "Folder/", d, &no);
     for (int i = 0; i < no; ++i) {
         printf("%s\n",d[i]);
     }
+    printf("%zu\n",no);
+    printf("list returned %d\n", ah);
+
 
 
     return 0;
